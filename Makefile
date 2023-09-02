@@ -6,9 +6,6 @@ all: build
 build:
 	$(MSYS) qmk compile -j 8
 
-flash:
-	$(MSYS) qmk flash -j 8
-
 console:
 	$(MSYS) qmk console
 
