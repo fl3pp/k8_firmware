@@ -9,7 +9,3 @@ UNICODEMAP_ENABLE = yes
 
 # BOOTMAGIC_ENABLE = no	# https://beta.docs.qmk.fm/using-qmk/hardware-features/feature_bootmagic
 # NKRO_ENABLE = no
-
-
-
-
