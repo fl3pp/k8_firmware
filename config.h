@@ -13,5 +13,6 @@
 #define TAPPING_FORCE_HOLD
 // SEE: https://precondition.github.io/home-row-mods#using-home-row-mods-with-qmk
 
-#define UNICODE_SELECTED_MODES UC_WIN
+// requires WinCompose installed with F13 trigger 
+#define UNICODE_SELECTED_MODES UC_WINC
 #define UNICODE_KEY_WINC KC_F13

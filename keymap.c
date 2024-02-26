@@ -45,7 +45,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_DEV] = {
       {   RESET,        _______,      _______,      _______,      LALT(KC_F4),   _______,  _______,  _______,      _______,      _______,      _______,         _______,   _______,   KC_NO,        _______,   _______,   _______ },
       {   _______,      _______,      _______,      _______,      _______,       _______,  _______,  _______,      _______,      _______,      _______,         _______,   _______,   LALT(KC_BSPC),_______,   _______,   _______ },
-      {   LALT(KC_TAB), KC_TILD,      KC_AT,        KC_PERC,      KC_AMPR,       _______,  KC_ASTR,  KC_DIAERESIS, KC_LCBR,      KC_RCBR,      _______,         _______,   _______,   _______,      _______,   _______,   _______ },
+      {   KC_TAB,       KC_TILD,      KC_AT,        KC_PERC,      KC_AMPR,       _______,  KC_ASTR,  KC_DIAERESIS, KC_LCBR,      KC_RCBR,      _______,         _______,   _______,   _______,      _______,   _______,   _______ },
       {   _______,      KC_EXLM,      KC_UNDS,      KC_DLR,       KC_MINUS,      KC_PLUS,  KC_PIPE,  KC_EQUAL,     KC_LPRN,      KC_RPRN,      _______,         _______,   KC_NO,     _______,      KC_NO,     KC_NO,     KC_NO },
       {   LALT(KC_LSFT),_______,      _______,      _______,      _______,       _______,  _______,  KC_LBRC,      KC_RBRC,      KC_LT,        KC_GT,           _______,   KC_NO,     _______,      KC_NO,     _______,   KC_NO },
       {   _______,      _______,      _______,      KC_NO,        KC_NO,         KC_NO,    KC_SPC,   KC_NO,        KC_NO,        KC_NO,        _______,         _______,   _______,   _______,      _______,   _______,   _______ }
@@ -54,6 +54,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 void keyboard_post_init_user(void) {
   rgblight_disable();
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+  if (get_highest_layer(state) == L_BASE) {
+    unregister_mods(MOD_MASK_ALT);
+  }
+  return state;
 }
 
 bool process_ostoggle(uint16_t keycode, bool shift) {
@@ -93,7 +100,6 @@ bool process_diaeresis(uint16_t keycode, bool shift) {
 
   if (!diaeresis) return true;
 
-
   if (is_mac) {
     diaeresis = false;
     return true;
@@ -124,13 +130,45 @@ bool process_diaeresis(uint16_t keycode, bool shift) {
   return true;
 }
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  if (!record->event.pressed) return true;
-  const bool shift = (get_mods() | get_oneshot_mods()) & MOD_MASK_SHIFT;
+bool process_alt_tab(uint16_t keycode) {
+  if (keycode == KC_TAB && IS_LAYER_ON(L_DEV)) register_mods(MOD_MASK_ALT);
+  return true;
+}
 
+bool process_shift_backspace(uint16_t keycode, bool pressed, bool shift) {
+  if (keycode != KC_BSPC) return true;
+
+  static bool shift_del_active = false;
+  uint8_t mod_state = get_mods();
+
+  if (pressed) {
+    if (mod_state & MOD_MASK_SHIFT) {
+      del_mods(MOD_MASK_SHIFT);
+      register_code(KC_DEL);
+      shift_del_active = true;
+      set_mods(mod_state); // reaply mod to keep shifts working after tap
+      return false;
+    }
+  } else {
+    if (shift_del_active) {
+      unregister_code(KC_DEL);
+      shift_del_active = false;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  const bool shift = (get_mods() | get_oneshot_mods()) & MOD_MASK_SHIFT;
   keycode = keycode == LGUI_T(KC_A) ? KC_A : keycode;
+
+  if (!process_shift_backspace(keycode, record->event.pressed, shift)) { return false; }
+  if (!record->event.pressed) return true; // the following processors assume keydown
   if (!process_ostoggle(keycode, shift)) { return false; }
   if (!process_diaeresis(keycode, shift)) { return false; }
+  if (!process_alt_tab(keycode)) { return false; }
 
   return true;
 }
