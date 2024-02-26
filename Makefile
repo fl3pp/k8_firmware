@@ -12,7 +12,7 @@ console:
 setup:
 	$(MSYS) qmk config user.hide_welcome=True
 	$(MSYS) qmk setup --home "C:/dev/qmk_sonix" --yes
-	$(MSYS) qmk config user.keyboard=keychron/k8/rgb
+	$(MSYS) qmk config user.keyboard=keychron/k8/rgb/ansi
 	$(MSYS) qmk config user.keymap=fl3pp
 
 clean:
